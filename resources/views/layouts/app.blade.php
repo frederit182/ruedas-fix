@@ -12,10 +12,11 @@
         <h1 class="text-xl font-bold mb-6">⚙️ Control Ruedas</h1>
 
         <nav class="space-y-3">
-            <a href="/" class="block hover:bg-gray-700 p-2 rounded">🏠 Dashboard</a>
-            <a href="#" class="block hover:bg-gray-700 p-2 rounded">📦 Ruedas</a>
-            <a href="#" class="block hover:bg-gray-700 p-2 rounded">👥 Clientes</a>
-        </nav>
+    <a href="/" class="block hover:bg-gray-700 p-2 rounded">🏠 Dashboard</a>
+    <a href="#" class="block hover:bg-gray-700 p-2 rounded">📦 Ruedas</a>
+    <a href="{{ route('clientes.create') }}" class="block hover:bg-gray-700 p-2 rounded">👥 Clientes</a>
+    <a href="{{ route('clientes.index') }}" class="block hover:bg-gray-700 p-2 rounded">📋 Historial</a>
+</nav>
     </aside>
 
     <!-- Contenido -->

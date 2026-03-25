@@ -8,28 +8,21 @@ use Carbon\Carbon;
 
 class RegistroInstalacionController extends Controller
 {
-    // 👇 ESTE ES NUEVO
     public function index()
-{
-    $registros = RegistroInstalacion::latest()->get();
+    {
+        $registros = RegistroInstalacion::latest()->get();
 
-    $total = $registros->count();
+        $total = $registros->count();
+        $alertas = 0;
 
-    $alertas = 0;
-
-    foreach ($registros as $r) {
-        if (!$r->tipo_cobro && $r->fecha_ultima_instalacion) {
-            $meses = \Carbon\Carbon::parse($r->fecha_ultima_instalacion)
-                ->diffInMonths(\Carbon\Carbon::now());
-
-            if ($meses < 10) {
+        foreach ($registros as $r) {
+            if ($r->tipo_cobro == 'cobro') {
                 $alertas++;
             }
         }
-    }
 
-    return view('registros.index', compact('registros', 'total', 'alertas'));
-}
+        return view('registros.index', compact('registros', 'total', 'alertas'));
+    }
 
     public function create()
     {
@@ -38,7 +31,6 @@ class RegistroInstalacionController extends Controller
 
     public function store(Request $request)
     {
-        // Validación básica
         $request->validate([
             'empresa' => 'required',
             'serial_equipo' => 'required',
@@ -46,22 +38,64 @@ class RegistroInstalacionController extends Controller
             'fecha_instalacion' => 'required|date',
         ]);
 
-        // Lógica de cobro
-        if ($request->tipo_cobro == 0 && $request->fecha_ultima_instalacion) {
+        $serial = trim($request->serial_equipo);
 
-            $fecha = Carbon::parse($request->fecha_ultima_instalacion);
-            $hoy = Carbon::now();
+        $ultimaInstalacion = RegistroInstalacion::where('serial_equipo', $serial)
+            ->latest('fecha_instalacion')
+            ->first();
 
-            $meses = $fecha->diffInMonths($hoy);
+        $tipoCobro = 'cobro';
 
-            if ($meses < 10) {
-                return back()->with('error', '⚠️ Debe ser COBRO (menos de 10 meses)');
+        if ($ultimaInstalacion) {
+            $fechaAnterior = Carbon::parse($ultimaInstalacion->fecha_instalacion);
+            $fechaActual = Carbon::parse($request->fecha_instalacion);
+
+            $meses = $fechaAnterior->diffInMonths($fechaActual);
+
+            if ($meses >= 10) {
+                $tipoCobro = 'cps';
             }
         }
 
-        RegistroInstalacion::create($request->all());
+        RegistroInstalacion::create([
+            'empresa' => $request->empresa,
+            'serial_equipo' => $serial,
+            'cantidad_ruedas' => $request->cantidad_ruedas,
+            'fecha_instalacion' => $request->fecha_instalacion,
+            'tipo_cobro' => $tipoCobro,
+            'observacion' => $request->observacion,
+        ]);
 
         return redirect()->route('registros.index')
             ->with('success', 'Registro guardado correctamente');
+    }
+
+    public function buscarSerial($serial)
+    {
+        $serial = trim($serial);
+
+        $registro = RegistroInstalacion::where('serial_equipo', $serial)
+            ->latest('fecha_instalacion')
+            ->first();
+
+        if (!$registro) {
+            return response()->json([
+                'existe' => false
+            ]);
+        }
+
+        $fechaAnterior = Carbon::parse($registro->fecha_instalacion);
+        $hoy = Carbon::now();
+
+        $meses = $fechaAnterior->diffInMonths($hoy);
+
+        return response()->json([
+            'existe' => true,
+            'fecha' => $registro->fecha_instalacion,
+            'empresa' => $registro->empresa,
+            'estado' => $meses < 10 
+                ? 'COBRAR (EN GARANTÍA)' 
+                : 'CPS (ASUME EMPRESA)'
+        ]);
     }
 }
