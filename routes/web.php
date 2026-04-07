@@ -20,3 +20,10 @@ Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.st
 Route::get('/buscar-serial', [ClienteController::class, 'buscar'])->name('clientes.buscar');
 // AJAX
 Route::get('/buscar-serial/{serial}', [RegistroInstalacionController::class, 'buscarSerial']);
+use App\Http\Controllers\ConsumoRuedaController;
+
+Route::get('/consumos/create', [ConsumoRuedaController::class, 'create']);
+Route::post('/consumos', [ConsumoRuedaController::class, 'store'])->name('consumos.store'); 
+Route::get('/equipos/{cliente}', function ($clienteId) {
+    return \App\Models\Equipo::where('cliente_id', $clienteId)->get();
+});

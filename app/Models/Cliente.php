@@ -14,4 +14,8 @@ class Cliente extends Model
     {
         return $this->hasMany(Serial::class);
     }
+    public function equipos()
+{
+    return $this->hasMany(Equipo::class, 'cliente_id');
+}
 }
