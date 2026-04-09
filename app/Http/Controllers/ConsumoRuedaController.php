@@ -3,62 +3,56 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Cliente;
-use App\Models\Equipo;
-use App\Models\Rueda;
 use App\Models\ConsumoRueda;
+use App\Models\Cliente;
+use App\Models\InventarioRueda;
 
 class ConsumoRuedaController extends Controller
 {
     public function create()
     {
-        return view('consumos.create', [
-            'clientes' => Cliente::all(),
-            'equipos' => Equipo::all(),
-            'ruedas' => Rueda::all(),
-        ]);
+        $clientes = Cliente::all();
+        $ruedas = InventarioRueda::all();
+
+        return view('consumo.create', compact('clientes', 'ruedas'));
     }
 
     public function store(Request $request)
     {
-        // 1. VALIDACIÓN
-        $request->validate([
-            'cliente_id' => 'required',
-            'equipo_id' => 'required',
-            'rueda_id' => 'required',
-            'cantidad' => 'required|numeric|min:1',
-            'cobrado' => 'required',
-            'numero_cotizacion' => 'nullable',
-            'observacion' => 'nullable',
-        ]);
+        $rueda = InventarioRueda::where('referencia_rueda', $request->referencia_rueda)->first();
 
-        // 2. BUSCAR RUEDA
-        $rueda = Rueda::findOrFail($request->rueda_id);
-
-        // 3. VALIDAR STOCK
-        if ($rueda->stock < $request->cantidad) {
+        if (!$rueda || $rueda->cantidad < $request->cantidad) {
             return back()->with('error', 'No hay suficiente stock');
         }
 
-        // 4. CREAR CONSUMO
-        ConsumoRueda::create([
-            'cliente_id' => $request->cliente_id,
-            'equipo_id' => $request->equipo_id,
-            'rueda_id' => $request->rueda_id,
-            'cantidad' => $request->cantidad,
-            'fecha' => now(),
-            'cobrado' => $request->cobrado,
-            'numero_cotizacion' => $request->numero_cotizacion ?? null,
-            'observacion' => $request->observacion ?? null,
-        ]);
+        ConsumoRueda::create($request->all());
 
-        // 5. DESCONTAR STOCK
-        $rueda->stock -= $request->cantidad;
+        $rueda->cantidad -= $request->cantidad;
         $rueda->save();
 
-        return back()->with('success', 'Consumo registrado correctamente');
-        if ($rueda->stock <= 2) {
-    return back()->with('success', 'Consumo registrado, ⚠ stock bajo: ' . $rueda->stock);
-}
+        return back()->with('success', 'Consumo registrado');
+    }
+
+    // 🔥 HISTORIAL POR CLIENTE CON FILTRO
+    public function historialCliente(Request $request, $cliente_id)
+    {
+        $query = ConsumoRueda::where('cliente_id', $cliente_id);
+
+        // 🔍 FILTRO POR FECHA
+        if ($request->desde) {
+            $query->whereDate('fecha', '>=', $request->desde);
+        }
+
+        if ($request->hasta) {
+            $query->whereDate('fecha', '<=', $request->hasta);
+        }
+
+        $consumos = $query->orderBy('fecha', 'desc')->get();
+
+        $cliente = Cliente::find($cliente_id);
+
+        $totalRuedas = $consumos->sum('cantidad');
+
+        return view('consumo.historial', compact('consumos', 'cliente', 'totalRuedas'));
     }
 }

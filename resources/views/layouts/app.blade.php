@@ -13,10 +13,24 @@
 
         <nav class="space-y-3">
     <a href="/" class="block hover:bg-gray-700 p-2 rounded">🏠 Dashboard</a>
-    <a href="#" class="block hover:bg-gray-700 p-2 rounded">📦 Ruedas</a>
-    <a href="{{ route('clientes.create') }}" class="block hover:bg-gray-700 p-2 rounded">👥 Clientes</a>
-    <a href="{{ route('clientes.index') }}" class="block hover:bg-gray-700 p-2 rounded">📋 Historial</a>
+
+    <a href="{{ route('inventario.index') }}" class="block hover:bg-gray-700 p-2 rounded">
+        📦 Inventario de Ruedas
+    </a>
+
+    <a href="{{ route('clientes.create') }}" class="block hover:bg-gray-700 p-2 rounded">
+        👥 Clientes
+    </a>
+
+    <a href="{{ route('clientes.index') }}" class="block hover:bg-gray-700 p-2 rounded">
+        📋 Historial
+    </a>
+
+    <a href="{{ route('consumo.index') }}" class="block hover:bg-gray-700 p-2 rounded">
+        🔧 Consumo de Ruedas
+    </a>
 </nav>
+
     </aside>
 
     <!-- Contenido -->

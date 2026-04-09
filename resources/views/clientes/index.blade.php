@@ -32,12 +32,13 @@
                 <tr>
                     <th class="p-3 text-left">Empresa</th>
                     <th class="p-3 text-left">Seriales</th>
+                    <th class="p-3 text-left">Acciones</th>
                 </tr>
             </thead>
 
             <tbody>
 
-            @foreach($clientes as $cliente)
+            @forelse($clientes as $cliente)
 
             <tr class="hover:bg-gray-50">
                 <td class="p-3">{{ $cliente->empresa }}</td>
@@ -49,9 +50,23 @@
                         </span>
                     @endforeach
                 </td>
+
+                <!-- 🔥 BOTÓN HISTORIAL -->
+                <td class="p-3">
+                    <a href="{{ route('consumo.historial', $cliente->id) }}" 
+                       class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                        Ver historial
+                    </a>
+                </td>
             </tr>
 
-            @endforeach
+            @empty
+            <tr>
+                <td colspan="3" class="text-center p-4">
+                    No hay clientes registrados
+                </td>
+            </tr>
+            @endforelse
 
             </tbody>
         </table>
